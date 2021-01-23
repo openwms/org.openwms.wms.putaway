@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.openwms</groupId>
         <artifactId>org.openwms.parent</artifactId>
-        <version>18</version>
+        <version>19</version>
         <relativePath />
     </parent>
     <artifactId>org.openwms.wms.putaway</artifactId>
@@ -48,6 +49,8 @@
 		</developer>
 	</developers>
 
+	<contributors></contributors>
+
 	<ciManagement>
         <system>travis</system>
         <url>https://travis-ci.com/openwms/${project.artifactId}</url>
@@ -62,10 +65,12 @@
 	</ciManagement>
 
 	<properties>
+		<commons-configuration.version>1.10</commons-configuration.version>
 		<common.version>1.7.0-SNAPSHOT</common.version>
 		<core.version>1.9.0-SNAPSHOT</core.version>
 		<guava.version>30.0-jre</guava.version>
-		<spring-cloud-dependencies.version>Hoxton.RELEASE</spring-cloud-dependencies.version>
+		<HdrHistogram.version>2.1.12</HdrHistogram.version>
+		<spring-cloud-dependencies.version>Hoxton.SR9</spring-cloud-dependencies.version>
 	</properties>
 
 	<reporting>
@@ -114,6 +119,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<executions>
 					<execution>
+                        <id>repackage</id>
 						<goals>
 							<goal>build-info</goal>
 						</goals>
@@ -148,6 +154,18 @@
 				<version>${guava.version}</version>
 			</dependency>
 			<dependency>
+				<!-- com.netflix.eureka:eureka has an internal clash -->
+				<groupId>commons-configuration</groupId>
+				<artifactId>commons-configuration</artifactId>
+				<version>${commons-configuration.version}</version>
+			</dependency>
+			<dependency>
+				<!-- com.netflix.eureka:eureka has an internal clash -->
+				<groupId>org.hdrhistogram</groupId>
+				<artifactId>HdrHistogram</artifactId>
+				<version>${HdrHistogram.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-dependencies</artifactId>
 				<version>${spring-cloud-dependencies.version}</version>
@@ -180,7 +198,17 @@
 		<!-- Spring Dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter</artifactId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-amqp</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -204,6 +232,11 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-config</artifactId>
 			<optional>true</optional>
@@ -212,76 +245,37 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 			<optional>true</optional>
-			<exclusions>
-				<exclusion>
-					<!-- Internal MAJOR clash -->
-					<groupId>com.netflix.servo</groupId>
-					<artifactId>servo-core</artifactId>
-				</exclusion>
-				<exclusion>
-					<!-- Bites with Spring Data Envers -->
-					<groupId>joda-time</groupId>
-					<artifactId>joda-time</artifactId>
-				</exclusion>
-				<exclusion>
-					<!-- Internal MAJOR clash -->
-					<groupId>com.fasterxml.woodstox</groupId>
-					<artifactId>woodstox-core</artifactId>
-				</exclusion>
-				<exclusion>
-					<!-- Internal MAJOR clash -->
-					<groupId>com.google.guava</groupId>
-					<artifactId>guava</artifactId>
-				</exclusion>
-				<exclusion>
-					<!-- Bites with Guava -->
-					<groupId>com.google.code.findbugs</groupId>
-					<artifactId>jsr305</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 			<optional>true</optional>
 		</dependency>
-
-		<!-- Fix Exclusions -->
 		<dependency>
-			<!-- com.netflix.eureka:eureka-client has an internal clash -->
-			<groupId>com.netflix.servo</groupId>
-			<artifactId>servo-core</artifactId>
-			<version>0.12.21</version>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-sleuth</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-zipkin</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- Observability: Monitoring -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- 3rd party dependencies -->
+		<dependency>
+			<!-- Need to upgrade Guava from version 11 because of CVE -->
 			<!-- Required by eureka-client -->
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<optional>true</optional>
-		</dependency>
-
-		<dependency>
-			<!-- com.netflix.eureka:eureka-client has an internal clash -->
-			<groupId>com.fasterxml.woodstox</groupId>
-			<artifactId>woodstox-core</artifactId>
-			<version>6.2.0</version>
-			<optional>true</optional>
-		</dependency>
-
-		<dependency>
-			<groupId>io.interface21</groupId>
-			<artifactId>ameba-lib</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>io.github.openfeign</groupId>
-			<artifactId>feign-httpclient</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -290,15 +284,59 @@
 			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-httpclient</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>io.interface21</groupId>
+			<artifactId>ameba-lib</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
     </dependencies>
 
     <profiles>
         <profile>
-        <id>schemagen</id>
+			<id>coverage</id>
             <properties>
-                <surefireArgs>-Dspring.profiles.active=ASYNCHRONOUS,TEST,TESTPG</surefireArgs>
-                <schemagen.outputDirectory>${project.build.directory}/site/${project.version}</schemagen.outputDirectory>
+				<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+				<sonar.organization>openwms-github</sonar.organization>
+				<sonar.projectKey>openwms_org.openwms.wms.inventory</sonar.projectKey>
+				<sonar.sources>src/main/java/</sonar.sources>
+				<sonar.java.binaries>target/classes</sonar.java.binaries>
+				<sonar.java.source>${java.version}</sonar.java.source>
+				<enforcer.skip>true</enforcer.skip>
+				<asciidoc.skip>true</asciidoc.skip>
             </properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<version>0.8.5</version>
+						<executions>
+							<execution>
+								<id>prepare-agent</id>
+								<goals>
+									<goal>prepare-agent</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>report</id>
+								<goals>
+									<goal>report</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
         </profile>
     </profiles>
 
@@ -324,6 +362,14 @@
             <releases>
                 <enabled>true</enabled>
 			</releases>
+        </repository>
+        <repository>
+            <id>spring-snapshots</id>
+            <name>Spring Snapshots</name>
+            <url>https://repo.spring.io/snapshot</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
 		</repository>
 		<repository>
 			<id>spring-milestones</id>
@@ -334,4 +380,14 @@
 			</snapshots>
 		</repository>
 	</repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
 </project>
