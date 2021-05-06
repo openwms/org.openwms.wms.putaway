@@ -63,7 +63,7 @@ class PutawayServiceImpl implements PutawayService {
 
         LOGGER.debug("Searching [{}] Locations in LocationGroups [{}] in groupStateIn [{}] and groupStateOut [{}]", count,
                 stockLocationGroupNames, groupStateIn, groupStateOut);
-        TransportUnit transportUnit = transportUnitService.findByBarcode(barcode);
+        TransportUnit transportUnit = transportUnitService.findByBarcode(barcode.getValue());
         List<LocationType> locationTypes = transportUnit.getTransportUnitType()
                 .getTypePlacingRules()
                 .stream()
@@ -93,7 +93,7 @@ class PutawayServiceImpl implements PutawayService {
             LocationGroupState groupStateIn, LocationGroupState groupStateOut) {
         LOGGER.debug("Searching a Location in LocationGroups [{}] in groupStateIn [{}] and groupStateOut [{}]", stockLocationGroupNames,
                 groupStateIn, groupStateOut);
-        TransportUnit transportUnit = transportUnitService.findByBarcode(barcode);
+        TransportUnit transportUnit = transportUnitService.findByBarcode(barcode.getValue());
         List<LocationType> locationTypes = transportUnit.getTransportUnitType()
                 .getTypePlacingRules()
                 .stream()
