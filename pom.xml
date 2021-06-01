@@ -307,7 +307,7 @@
             <properties>
 				<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 				<sonar.organization>openwms-github</sonar.organization>
-				<sonar.projectKey>openwms_org.openwms.wms.inventory</sonar.projectKey>
+				<sonar.projectKey>${project.groupId}:${project.artifactId}</sonar.projectKey>
 				<sonar.sources>src/main/java/</sonar.sources>
 				<sonar.java.binaries>target/classes</sonar.java.binaries>
 				<sonar.java.source>${java.version}</sonar.java.source>
